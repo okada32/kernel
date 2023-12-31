@@ -120,11 +120,9 @@ struct himax_i2c_platform_data {
 	bool support_dex;
 	bool notify_tsp_esd;
 
-	const char *panel_buck_en;
-	const char *panel_buck_en2;
-	const char *panel_ldo_en;
 	const char *panel_reset;
 	const char *panel_bl_en;
+	const char *panel_vddi;
 
 	const char *i_CTPM_firmware_name;
 	const char *proj_name;

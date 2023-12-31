@@ -443,23 +443,19 @@ void ist40xx_special_cmd(struct ist40xx_data *data, int cmd)
 					data->scrub_id = SPONGE_EVENT_TYPE_FOD;
 					input_info(true, &data->client->dev,
 						"FOD %s\n", g_msg.b.gid ? "normal" : "long");
+					data->fod_pressed = true;
+					sysfs_notify(&data->input_dev->dev.kobj, NULL, "fod_pressed");
 				} else if (g_msg.b.gid == G_ID_FOD_RELEASE) {
 					data->scrub_id = SPONGE_EVENT_TYPE_FOD_RELEASE;
 					input_info(true, &data->client->dev,
 						"FOD release\n");
+					data->fod_pressed = false;
+					sysfs_notify(&data->input_dev->dev.kobj, NULL, "fod_pressed");
 				} else if (g_msg.b.gid == G_ID_FOD_OUT) {
 					data->scrub_id = SPONGE_EVENT_TYPE_FOD_OUT;
 					input_info(true, &data->client->dev,
 						"FOD out\n");
 				}
-				input_report_key(data->input_dev,
-						 KEY_BLACK_UI_GESTURE,
-						 true);
-				input_sync(data->input_dev);
-				input_report_key(data->input_dev,
-						 KEY_BLACK_UI_GESTURE,
-						 false);
-				input_sync(data->input_dev);
 				break;
 			default:
 				input_err(true, &data->client->dev,
@@ -1000,9 +996,9 @@ irqreturn_t ist40xx_irq_thread(int irq, void *ptr)
 	if (PARSE_HOVER_NOTI(*msg)) {
 		if (data->hover != PARSE_HOVER_VAL(*msg))
 			data->hover = PARSE_HOVER_VAL(*msg);
-		input_report_abs(data->input_dev_proximity, ABS_MT_CUSTOM, data->hover);
+		input_report_abs(data->input_dev_proximity, ABS_MT_CUSTOM, !data->hover);
 		input_sync(data->input_dev_proximity);
-		input_info(true, &data->client->dev, "Hover Level %d\n", data->hover);
+		input_info(true, &data->client->dev, "Hover Level %d\n", !data->hover);
 
 		if (read_cnt <= 0)
 			goto irq_event;

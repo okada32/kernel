@@ -1326,7 +1326,8 @@ static void sec_ts_read_event(struct sec_ts_data *ts)
 				ts->coord[t_id].action = p_event_coord->tchsta;
 				ts->coord[t_id].x = (p_event_coord->x_11_4 << 4) | (p_event_coord->x_3_0);
 				ts->coord[t_id].y = (p_event_coord->y_11_4 << 4) | (p_event_coord->y_3_0);
-				ts->coord[t_id].z = p_event_coord->z & 0x3F;
+				ts->coord[t_id].z = p_event_coord->z &
+							SEC_TS_PRESSURE_MAX;
 				ts->coord[t_id].ttype = p_event_coord->ttype_3_2 << 2 | p_event_coord->ttype_1_0 << 0;
 				ts->coord[t_id].major = p_event_coord->major;
 				ts->coord[t_id].minor = p_event_coord->minor;
@@ -1578,7 +1579,9 @@ static void sec_ts_read_event(struct sec_ts_data *ts)
 					if (p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_LONG || p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_NORMAL) {
 						ts->scrub_id = SPONGE_EVENT_TYPE_FOD;
 						input_info(true, &ts->client->dev, "%s: FOD: %s\n", __func__, p_gesture_status->gesture_id ? "normal" : "long");
-						input_report_key(ts->input_dev, KEY_BLACK_UI_GESTURE, 1);
+					input_report_key(ts->input_dev, KEY_WAKEUP, 1);
+					input_sync(ts->input_dev);
+					input_report_key(ts->input_dev, KEY_WAKEUP, 0);
 					} else if (p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_RELEASE) {
 						ts->scrub_id = SPONGE_EVENT_TYPE_FOD_RELEASE;
 						input_info(true, &ts->client->dev, "%s: FOD release\n", __func__);
@@ -2342,9 +2345,7 @@ static int sec_ts_parse_dt(struct i2c_client *client)
 	of_property_read_u32(np, "sec,ss_touch_num", &pdata->ss_touch_num);
 	input_err(true, dev, "%s: ss_touch_num:%d\n", __func__, pdata->ss_touch_num);
 #endif
-#ifdef CONFIG_SEC_FACTORY
 	pdata->support_mt_pressure = true;
-#endif
 	input_err(true, &client->dev, "%s: i2c buffer limit: %d, lcd_id:%06X, bringup:%d, FW:%s(%d),"
 			" id:%d,%d, dex:%d, max(%d/%d), FOD:%d, AOT:%d, ED:%d\n",
 			__func__, pdata->i2c_burstmax, lcdtype, pdata->bringup, pdata->firmware_name,
@@ -2556,7 +2557,8 @@ static void sec_ts_set_input_prop(struct sec_ts_data *ts, struct input_dev *dev,
 	input_set_abs_params(dev, ABS_MT_TOUCH_MINOR, 0, 255, 0, 0);
 	input_set_abs_params(dev, ABS_MT_CUSTOM, 0, 0xFFFFFFFF, 0, 0);
 	if (ts->plat_data->support_mt_pressure)
-		input_set_abs_params(dev, ABS_MT_PRESSURE, 0, 255, 0, 0);
+		input_set_abs_params(dev, ABS_MT_PRESSURE, 0,
+					SEC_TS_PRESSURE_MAX, 0, 0);
 
 	if (propbit == INPUT_PROP_POINTER)
 		input_mt_init_slots(dev, MAX_SUPPORT_TOUCH_COUNT, INPUT_MT_POINTER);

@@ -1312,7 +1312,7 @@ int32_t cam_sensor_driver_cmd(struct cam_sensor_ctrl_t *s_ctrl,
 		if ((rc < 0) &&
 			(((s_ctrl->soc_info.index == 0) && (s_ctrl->sensordata->slave_info.sensor_id == SENSOR_ID_S5K4HA)) ||
 			 ((s_ctrl->soc_info.index == 1) && (s_ctrl->sensordata->slave_info.sensor_id == SENSOR_ID_GC5035)) ||
-			 ((s_ctrl->soc_info.index == 13) && (s_ctrl->sensordata->slave_info.sensor_id == SENSOR_ID_GC5035))))
+			 ((s_ctrl->soc_info.index == 8) && (s_ctrl->sensordata->slave_info.sensor_id == SENSOR_ID_GC5035))))
 		{
 			CAM_ERR(CAM_SENSOR,
 				"Probe failed - slot:%d,slave_addr:0x%x,sensor_id:0x%x",
@@ -1755,6 +1755,8 @@ init:
 #if defined(CONFIG_GC5035_MACRO_OTP_DD_AUTOLOAD)
 #if defined (CONFIG_SEC_A52Q_PROJECT)
 			if ((s_ctrl->soc_info.index == 4)||(s_ctrl->soc_info.index == 3)) {
+#elif defined(CONFIG_SEC_GTA4XLVE_PROJECT)
+            if ((s_ctrl->soc_info.index == 1)||(s_ctrl->soc_info.index == 8)) {
 #elif defined(CONFIG_SEC_A72Q_PROJECT)
 			if (s_ctrl->soc_info.index == 4) {
 #endif			

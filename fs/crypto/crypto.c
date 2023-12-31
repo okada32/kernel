@@ -448,7 +448,6 @@ static int __init fscrypt_init(void)
 
 fail_free_info:
 	kmem_cache_destroy(fscrypt_info_cachep);
-
 fail_free_queue:
 	destroy_workqueue(fscrypt_read_workqueue);
 fail:

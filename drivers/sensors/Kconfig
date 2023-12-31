@@ -143,3 +143,9 @@ config USE_MULTI_CHANNEL
 	  Enable grip multi channel
 	  This option enables feature that is related multi-Channel for grip Sensor.
 
+config USE_SINGLE_IRQ_B
+	tristate "Grip sensor single irq b"
+	default n
+	help
+	  Enable grip single irq b
+	  This option enables feature that is related single irq b for grip Sensor.

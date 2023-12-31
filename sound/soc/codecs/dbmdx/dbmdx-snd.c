@@ -122,7 +122,7 @@ static int dbmdx_snd_probe(struct platform_device *pdev)
 	/* note: platform_set_drvdata() here saves pointer to the card's data
 	 * on the device's 'struct device_private *p'->driver_data
 	 */
-	dev_info(&pdev->dev, "%s:\n", __func__);
+	dev_dbg(&pdev->dev, "%s:\n", __func__);
 
 #if (defined(DBMDX_DEFER_SND_CARD_LOADING) && !IS_MODULE(CONFIG_SND_SOC_DBMDX))
 	ret = of_property_read_u32(np, "wait_for_card_index",
@@ -131,7 +131,7 @@ static int dbmdx_snd_probe(struct platform_device *pdev)
 		dev_info(&pdev->dev, "%s: invalid 'card_index' using default\n",
 				__func__);
 	} else {
-		dev_info(&pdev->dev, "%s: 'wait_for_card_index' = %d\n",
+		dev_dbg(&pdev->dev, "%s: 'wait_for_card_index' = %d\n",
 				__func__, card_index);
 	}
 
@@ -194,7 +194,7 @@ static struct platform_driver board_dbmdx_snd_drv = {
 	.remove = dbmdx_snd_remove,
 };
 
-#if (IS_ENABLED(CONFIG_SND_SOC_DBMDX) && !IS_MODULE(CONFIG_SND_SOC_DBMDX))
+#if !IS_MODULE(CONFIG_SND_SOC_DBMDX)
 static int __init board_dbmdx_mod_init(void)
 {
 	return platform_driver_register(&board_dbmdx_snd_drv);

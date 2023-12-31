@@ -1,3 +1,39 @@
+config SEC_A70Q_PROJECT
+        default n
+        bool "Samsung A70Q Project"
+        help
+          Support for Samsung A70Q Project
+
+config SEC_A70Q_EUR_PROJECT
+        default n
+        bool "Samsung A70Q EUR OPEN Project"
+        help
+          Support for Samsung A70Q EUR OPEN Project
+
+config SEC_A70Q_EUR_LDU_PROJECT
+        default n
+        bool "Samsung A70Q EUR LDU Project"
+        help
+          Support for Samsung A70Q EUR LDU Project
+
+config SEC_A71_PROJECT
+        default n
+        bool "Samsung A71 Project"
+        help
+          Support for Samsung A71 Project
+
+config SEC_A71_EUR_LDU_PROJECT
+        default n
+        bool "Samsung A71 EUR LDU Project"
+        help
+          Support for Samsung A71 EUR LDU Project
+
+config SEC_A71_EUR_PROJECT
+        default n
+        bool "Samsung A71 EUR OPEN Project"
+        help
+          Support for Samsung A71 EUR OPEN Project
+
 config SEC_M51_PROJECT
         default n
         bool "Samsung M51 Project"
@@ -9,4 +45,3 @@ config SEC_M51_EUR_PROJECT
         bool "Samsung M51 EUR OPEN Project"
         help
           Support for Samsung M51 EUR OPEN Project
-

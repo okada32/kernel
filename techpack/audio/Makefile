@@ -41,6 +41,7 @@ include $(srctree)/techpack/audio/config/sm7150_a90q.conf
 else
 include $(srctree)/techpack/audio/config/sm6150auto.conf
 endif
+export
 endif
 
 # Use USERINCLUDE when you must reference the UAPI directories only.

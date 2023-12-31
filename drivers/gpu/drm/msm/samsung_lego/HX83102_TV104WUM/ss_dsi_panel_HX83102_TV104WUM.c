@@ -56,7 +56,7 @@ static int samsung_panel_on_pre(struct samsung_display_driver_data *vdd)
 
 static int samsung_panel_on_post(struct samsung_display_driver_data *vdd)
 {
-	ss_buck_isl98608_control(vdd);
+	//ss_buck_isl98608_control(vdd);
 	return true;
 }
 
@@ -90,10 +90,10 @@ static char ss_panel_revision(struct samsung_display_driver_data *vdd)
 #define config_screenBrightnessSettingzero (0)
 
 /* Below value is pwm value & candela matching data at the 9bit 20khz PWM*/
-#define PWM_Outdoor (3445) //0x1CE 256~ 600CD
-#define PWM_Maximum (3030) //0x17E 255 500CD
-#define PWM_Default (1400) //0x85  125 190CD
-#define PWM_Minimum (30) //4CD
+#define PWM_Outdoor (3553) //0x1CE 256~ 480CD
+#define PWM_Maximum (2983) //0x17E 255 400CD
+#define PWM_Default (1365) //0x85 125 190CD
+#define PWM_Minimum (32) //4CD
 #define PWM_ZERO (0) //0CD
 
 #define BIT_SHIFT 10

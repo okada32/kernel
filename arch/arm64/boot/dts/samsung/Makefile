@@ -329,6 +329,18 @@ SEC_GTA4XLVEWIFI_EUR_DTBO := \
 SEC_GTA4XLVE_KOR_DTBO := \
 		atoll-sec-gta4xlve-kor-overlay-r00.dtbo
 
+# GTA4XLVE CHN
+SEC_GTA4XLVE_CHN_DTBO := \
+		atoll-sec-gta4xlve-chn-overlay-r00.dtbo
+
+
+# GTA4XLVEWIFI CHN
+SEC_GTA4XLVEWIFI_CHN_DTBO := \
+		atoll-sec-gta4xlvewifi-chn-overlay-r00.dtbo
+		
+# GTA4XLVEWIFI KOR
+SEC_GTA4XLVEWIFI_KOR_DTBO := \
+		atoll-sec-gta4xlvewifi-kor-overlay-r00.dtbo		
 
 define __sec_dtbo_build
 dtbo-$(2) += $(1)
@@ -464,6 +476,15 @@ $(eval $(call sec_dtbo_build, \
 
 $(eval $(call sec_dtbo_build, \
 		$(SEC_GTA4XLVE_KOR_DTBO),$(CONFIG_SEC_GTA4XLVE_KOR_OPEN),$(SEC_ATOLL_BASE_DTB)))
+
+$(eval $(call sec_dtbo_build, \
+		$(SEC_GTA4XLVE_CHN_DTBO),$(CONFIG_SEC_GTA4XLVE_CHN_OPEN),$(SEC_ATOLL_BASE_DTB)))
+
+$(eval $(call sec_dtbo_build, \
+		$(SEC_GTA4XLVEWIFI_CHN_DTBO),$(CONFIG_SEC_GTA4XLVEWIFI_CHN_OPEN),$(SEC_ATOLL_BASE_DTB)))
+		
+$(eval $(call sec_dtbo_build, \
+		$(SEC_GTA4XLVEWIFI_KOR_DTBO),$(CONFIG_SEC_GTA4XLVEWIFI_KOR_OPEN),$(SEC_ATOLL_BASE_DTB)))		
 endif
 
 ifeq ($(CONFIG_ARM64),y)
@@ -479,4 +500,4 @@ $(obj)/../%.dtb: $(src)/%.dts FORCE
 dtbs: $(addprefix $(obj)/../,$(dtb-y))
 endif
 
-clean-files := *.dtb *.reverse.dts *.dtbo
+clean-files := *.dtb *.dtbo

@@ -758,7 +758,7 @@ static struct platform_driver dbmdx_pcm_driver = {
 	.remove = dbmdx_pcm_platform_remove,
 };
 
-#if (IS_ENABLED(CONFIG_SND_SOC_DBMDX) && !IS_MODULE(CONFIG_SND_SOC_DBMDX))
+#if !IS_MODULE(CONFIG_SND_SOC_DBMDX)
 static int __init snd_dbmdx_pcm_init(void)
 {
 	return platform_driver_register(&dbmdx_pcm_driver);

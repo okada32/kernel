@@ -3009,6 +3009,7 @@ int himax_chip_common_init(void)
 #else
 	wakeup_source_init(ts->ts_SMWP_wake_lock, HIMAX_common_NAME);
 #endif
+	device_init_wakeup(&ts->spi->dev, true);
 #endif
 #ifdef HX_HIGH_SENSE
 	ts->HSEN_enable = 0;
@@ -3080,6 +3081,7 @@ err_report_data_init_failed:
 #else
 	wakeup_source_trash(ts->ts_SMWP_wake_lock);
 #endif
+	device_init_wakeup(&ts->spi->dev, false);
 #endif
 	mutex_destroy(&ts->device_lock);
 	mutex_destroy(&ts->irq_lock);
@@ -3147,6 +3149,7 @@ void himax_chip_common_deinit(void)
 #endif
 
 #ifdef HX_SMART_WAKEUP
+	device_init_wakeup(&ts->spi->dev, false);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 110))
 	wakeup_source_unregister(ts->ts_SMWP_wake_lock);
 #else
@@ -3273,11 +3276,8 @@ error:
 
 int himax_ctrl_lcd_regulators(struct himax_ts_data *ts, bool on)
 {
-	static struct regulator *panel_buck_en;
-	static struct regulator *panel_buck_en2;
-	static struct regulator *panel_ldo_en;
 	static struct regulator *panel_bl_en;
-
+	static struct regulator *panel_vddi;
 	static bool enabled;
 	int ret = 0;
 
@@ -3286,30 +3286,6 @@ int himax_ctrl_lcd_regulators(struct himax_ts_data *ts, bool on)
 
 	if (enabled == on)
 		return ret;
-
-	if (ts->pdata->panel_buck_en) {
-		if (IS_ERR_OR_NULL(panel_buck_en)) {
-			panel_buck_en = devm_regulator_get(ts->dev, ts->pdata->panel_buck_en);
-			if (IS_ERR_OR_NULL(panel_buck_en)) {
-				input_err(true, ts->dev, "%s: Failed to get panel_buck_en(%s) regulator.\n",
-						__func__, ts->pdata->panel_buck_en);
-				ret = PTR_ERR(panel_buck_en);
-				goto error;
-			}
-		}
-	}
-
-	if (ts->pdata->panel_buck_en2) {
-		if (IS_ERR_OR_NULL(panel_buck_en2)) {
-			panel_buck_en2 = devm_regulator_get(ts->dev, ts->pdata->panel_buck_en2);
-			if (IS_ERR_OR_NULL(panel_buck_en2)) {
-				input_err(true, ts->dev, "%s: Failed to get panel_buck_en2(%s) regulator.\n",
-						__func__, ts->pdata->panel_buck_en2);
-				ret = PTR_ERR(panel_buck_en2);
-				goto error;
-			}
-		}
-	}
 
 	if (ts->pdata->panel_bl_en) {
 		if (IS_ERR_OR_NULL(panel_bl_en)) {
@@ -3323,37 +3299,23 @@ int himax_ctrl_lcd_regulators(struct himax_ts_data *ts, bool on)
 		}
 	}
 
-	if (ts->pdata->panel_ldo_en) {
-		if (IS_ERR_OR_NULL(panel_ldo_en)) {
-			panel_ldo_en = devm_regulator_get(ts->dev, ts->pdata->panel_ldo_en);
-			if (IS_ERR_OR_NULL(panel_ldo_en)) {
-				input_err(true, ts->dev, "%s: Failed to get panel_ldo_en(%s) regulator.\n",
-						__func__, ts->pdata->panel_ldo_en);
-				ret = PTR_ERR(panel_ldo_en);
+	if (ts->pdata->panel_vddi) {
+		if (IS_ERR_OR_NULL(panel_vddi)) {
+			panel_vddi = devm_regulator_get(ts->dev, ts->pdata->panel_vddi);
+			if (IS_ERR_OR_NULL(panel_vddi)) {
+				input_err(true, ts->dev, "%s: Failed to get panel_vddi(%s) regulator.\n",
+						__func__, ts->pdata->panel_vddi);
+				ret = PTR_ERR(panel_vddi);
 				goto error;
 			}
 		}
 	}
 
 	if (on) {
-		if (ts->pdata->panel_ldo_en) {
-			ret = regulator_enable(panel_ldo_en);
+		if (ts->pdata->panel_vddi) {
+			ret = regulator_enable(panel_vddi);
 			if (ret) {
-				input_err(true, ts->dev, "%s: Failed to enable panel_ldo_en: %d\n", __func__, ret);
-				goto out;
-			}
-		}
-		if (ts->pdata->panel_buck_en2) {
-			ret = regulator_enable(panel_buck_en2);
-			if (ret) {
-				input_err(true, ts->dev, "%s: Failed to enable panel_buck_en2: %d\n", __func__, ret);
-				goto out;
-			}
-		}
-		if (ts->pdata->panel_buck_en) {
-			ret = regulator_enable(panel_buck_en);
-			if (ret) {
-				input_err(true, ts->dev, "%s: Failed to enable panel_buck_en: %d\n", __func__, ret);
+				input_err(true, ts->dev, "%s: Failed to enable panel_vddi: %d\n", __func__, ret);
 				goto out;
 			}
 		}
@@ -3365,12 +3327,8 @@ int himax_ctrl_lcd_regulators(struct himax_ts_data *ts, bool on)
 			}
 		}
 	} else {
-		if (ts->pdata->panel_buck_en)
-			regulator_disable(panel_buck_en);
-		if (ts->pdata->panel_buck_en2)
-			regulator_disable(panel_buck_en2);
-		if (ts->pdata->panel_ldo_en)
-			regulator_disable(panel_ldo_en);
+		if (ts->pdata->panel_vddi)
+			regulator_disable(panel_vddi);
 		if (ts->pdata->panel_bl_en)
 			regulator_disable(panel_bl_en);
 	}

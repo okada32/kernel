@@ -20,7 +20,7 @@
 
 #ifdef CONFIG_USE_IC_TYPE
 #define ISG6320_ES_TARGET          20000
-#define ISG6320_CS_TARGET          16000
+#define ISG6320_CS_TARGET          16384
 enum {
 	ES = 0,
 	CS,
@@ -52,7 +52,7 @@ const char *module_name[GRIP_MAX_CNT] = {
 	"grip_sensor_sub",
 	"grip_sensor_wifi"
 };
-
+#define NOTI_MODULE_NAME        "grip_notifier"
 enum registers {
 	ISG6320_IRQSRC_REG = 0x00,
 	ISG6320_IRQSTS_REG,
@@ -125,6 +125,8 @@ enum registers {
 #define ISG6320_PROX_B_STATE		0
 
 #define ISG6320_IRQ_ENABLE		0x0C
+#define ISG6320_IRQ_ENABLE_A		0x09
+#define ISG6320_IRQ_ENABLE_B		0x0A
 #define ISG6320_IRQ_DISABLE		0x0D
 
 #define ISG6320_DFE_ENABLE		0x80
@@ -153,6 +155,9 @@ enum registers {
 
 #define ISG6320_CAL_RTN_A_MASK		0x02
 #define ISG6320_CAL_RTN_B_MASK		0x01
+
+#define UNKNOWN_ON  1
+#define UNKNOWN_OFF 2
 
 enum {
 	OFF = 0,

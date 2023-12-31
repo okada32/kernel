@@ -251,16 +251,12 @@ int himax_parse_dt(struct himax_ts_data *ts,
 
 	I("%s: notify_tsp_esd:%d\n", __func__, pdata->notify_tsp_esd);
 
-	if (of_property_read_string(dt, "himax,panel_buck_en", &pdata->panel_buck_en))
-		input_err(true, ts->dev, "%s: Failed to get panel_buck_en name property\n", __func__);
-	if (of_property_read_string(dt, "himax,panel_buck_en2", &pdata->panel_buck_en2))
-		input_err(true, ts->dev, "%s: Failed to get panel_buck_en2 name property\n", __func__);
-	if (of_property_read_string(dt, "himax,panel_ldo_en", &pdata->panel_ldo_en))
-		input_err(true, ts->dev, "%s: Failed to get panel_ldo_en name property\n", __func__);
 	if (of_property_read_string(dt, "himax,panel_reset", &pdata->panel_reset))
 		input_err(true, ts->dev, "%s: Failed to get panel_reset name property\n", __func__);
 	if (of_property_read_string(dt, "himax,panel_bl_en", &pdata->panel_bl_en))
 		input_err(true, ts->dev, "%s: Failed to get panel_bl_en name property\n", __func__);
+	if (of_property_read_string(dt, "himax,panel_vddi", &pdata->panel_vddi))
+		input_err(true, ts->dev, "%s: Failed to get panel_vddi name property\n", __func__);
 
 	himax_vk_parser(dt, pdata);
 	return 0;

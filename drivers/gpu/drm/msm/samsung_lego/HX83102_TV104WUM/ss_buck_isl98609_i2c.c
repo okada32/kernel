@@ -148,7 +148,7 @@ int ss_buck_i2c_write_ex(u8 addr,  u8 value)
 int ss_buck_isl98608_control(struct samsung_display_driver_data *vdd)
 {
 	u8 buf[2];
-	u8 value = 0x02; //VN & VP 5.5V
+	u8 value = 0x08; //VN & VP 5.5V
 
 	if (!buck_pinfo.client) {
 		LCD_ERR("error pinfo\n");
@@ -162,7 +162,7 @@ int ss_buck_isl98608_control(struct samsung_display_driver_data *vdd)
 		}
 	}
 
-	ss_buck_i2c_write(buck_pinfo.client, 0x06, 0x0D);
+	ss_buck_i2c_write(buck_pinfo.client, 0x06, 0x08);
 	ss_buck_i2c_write(buck_pinfo.client, 0x08, value);
 	ss_buck_i2c_write(buck_pinfo.client, 0x09, value);
 

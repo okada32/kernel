@@ -1708,7 +1708,7 @@ int cam_sensor_core_power_up(struct cam_sensor_power_ctrl_t *ctrl,
 			return -EINVAL;
 		}
 //may be need to add project flag here
-#if defined(CONFIG_SEC_A52Q_PROJECT) || defined(CONFIG_SEC_A72Q_PROJECT)
+#if defined(CONFIG_SEC_A52Q_PROJECT) || defined(CONFIG_SEC_A72Q_PROJECT) || defined(CONFIG_SEC_GTA4XLVE_PROJECT)
 		if (power_setting->seq_type == SENSOR_VIO) {
 			usleep_range(15000, 20000);
 		}

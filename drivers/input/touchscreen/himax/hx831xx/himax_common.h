@@ -539,11 +539,15 @@ typedef enum {
 } TOUCH_POWER_MODE;
 
 enum {
+	SHUTDOWN = -1,
 	LCD_NONE = 0,
 	LCD_OFF,
 	LCD_ON,
 	LCD_DOZE,
 	LCD_DOZE_SUSPEND,
+	LPM_OFF = 20,
+	FORCE_OFF,
+	FORCE_ON,
 };
 
 enum {

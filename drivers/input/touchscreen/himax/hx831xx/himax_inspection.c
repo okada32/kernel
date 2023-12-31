@@ -5458,6 +5458,14 @@ static ssize_t enabled_store(struct device *dev, struct device_attribute *attr,
 			if (ts->SMWP_enable && ts->cover_closed)
 				himax_set_cover_mode(ts, ts->cover_closed);
 		}
+	} else if (buff[0] == SHUTDOWN) {
+#ifdef HX_RST_PIN_FUNC
+		if (gpio_is_valid(ts->pdata->gpio_reset)) {
+			disable_irq(ts->hx_irq);
+			gpio_set_value(ts->pdata->gpio_reset, 0);
+			I("%s make TP_RESET LOW\n", __func__);
+		}
+#endif
 	}
 
 	return count;
