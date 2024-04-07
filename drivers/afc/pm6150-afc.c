@@ -412,7 +412,7 @@ int afc_set_voltage(int vol)
 	return 0;
 }
 
-int is_afc(void)
+int is_afc()
 {
 	pr_info("%s\n", __func__);
 
