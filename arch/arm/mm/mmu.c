@@ -230,12 +230,14 @@ early_param("ecc", early_ecc);
 static int __init early_cachepolicy(char *p)
 {
 	pr_warn("cachepolicy kernel parameter not supported without cp15\n");
+	return 0;
 }
 early_param("cachepolicy", early_cachepolicy);
 
 static int __init noalign_setup(char *__unused)
 {
 	pr_warn("noalign kernel parameter not supported without cp15\n");
+	return 1;
 }
 __setup("noalign", noalign_setup);
 
@@ -416,9 +418,9 @@ void __set_fixmap(enum fixed_addresses idx, phys_addr_t phys, pgprot_t prot)
 		     FIXADDR_END);
 	BUG_ON(idx >= __end_of_fixed_addresses);
 
-	/* we only support device mappings until pgprot_kernel has been set */
+	/* We support only device mappings before pgprot_kernel is set. */
 	if (WARN_ON(pgprot_val(prot) != pgprot_val(FIXMAP_PAGE_IO) &&
-		    pgprot_val(pgprot_kernel) == 0))
+		    pgprot_val(prot) && pgprot_val(pgprot_kernel) == 0))
 		return;
 
 	if (pgprot_val(prot))
@@ -1793,7 +1795,6 @@ void __init paging_init(const struct machine_desc *mdesc)
 {
 	void *zero_page;
 
-	set_memsize_kernel_type(MEMSIZE_KERNEL_PAGING);
 	prepare_page_table();
 	map_lowmem();
 	memblock_set_current_limit(arm_lowmem_limit);
@@ -1816,7 +1817,6 @@ void __init paging_init(const struct machine_desc *mdesc)
 
 	/* Compute the virt/idmap offset, mostly for the sake of KVM */
 	kimage_voffset = (unsigned long)&kimage_voffset - virt_to_idmap(&kimage_voffset);
-	set_memsize_kernel_type(MEMSIZE_KERNEL_OTHERS);
 }
 
 void __init early_mm_init(const struct machine_desc *mdesc)

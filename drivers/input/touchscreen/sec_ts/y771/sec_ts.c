@@ -14,11 +14,6 @@ struct sec_ts_data *tsp_info;
 
 #include "sec_ts.h"
 
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#endif
-
 struct sec_ts_data *ts_dup;
 int layer_data[TYPE_RAWDATA_MAX];
 
@@ -269,16 +264,27 @@ static ssize_t secure_ownership_show(struct device *dev,
 	return snprintf(buf, PAGE_SIZE, "1");
 }
 
+static ssize_t sec_ts_fod_pressed_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct sec_ts_data *data = dev_get_drvdata(dev);
+
+	return snprintf(buf, PAGE_SIZE, "%u\n", data->fod_pressed);
+}
+
 static DEVICE_ATTR(secure_touch_enable, (S_IRUGO | S_IWUSR | S_IWGRP),
 		secure_touch_enable_show, secure_touch_enable_store);
 static DEVICE_ATTR(secure_touch, S_IRUGO, secure_touch_show, NULL);
 
 static DEVICE_ATTR(secure_ownership, S_IRUGO, secure_ownership_show, NULL);
 
+static DEVICE_ATTR(fod_pressed, S_IRUGO, sec_ts_fod_pressed_show, NULL);
+
 static struct attribute *secure_attr[] = {
 	&dev_attr_secure_touch_enable.attr,
 	&dev_attr_secure_touch.attr,
 	&dev_attr_secure_ownership.attr,
+	&dev_attr_fod_pressed.attr,
 	NULL,
 };
 
@@ -1584,13 +1590,14 @@ static void sec_ts_read_event(struct sec_ts_data *ts)
 					if (p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_LONG || p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_NORMAL) {
 						ts->scrub_id = SPONGE_EVENT_TYPE_FOD;
 						input_info(true, &ts->client->dev, "%s: FOD: %s\n", __func__, p_gesture_status->gesture_id ? "normal" : "long");
-					input_report_key(ts->input_dev, KEY_WAKEUP, 1);
-					input_sync(ts->input_dev);
-					input_report_key(ts->input_dev, KEY_WAKEUP, 0);
+					ts->fod_pressed = true;
+					sysfs_notify(&ts->input_dev->dev.kobj, NULL, "fod_pressed");
 					} else if (p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_RELEASE) {
 						ts->scrub_id = SPONGE_EVENT_TYPE_FOD_RELEASE;
 						input_info(true, &ts->client->dev, "%s: FOD release\n", __func__);
 						input_report_key(ts->input_dev, KEY_BLACK_UI_GESTURE, 1);
+					ts->fod_pressed = false;
+					sysfs_notify(&ts->input_dev->dev.kobj, NULL, "fod_pressed");
 					} else if (p_gesture_status->gesture_id == SEC_GESTURE_ID_FOD_OUT) {
 						ts->scrub_id = SPONGE_EVENT_TYPE_FOD_OUT;
 						input_info(true, &ts->client->dev, "%s: FOD OUT\n", __func__);
@@ -2607,13 +2614,6 @@ static void sec_factory_type_init(void)
 	layer_data[TYPE_RAW_DATA_NODE_GAP_Y] = TYPE_REMAP;
 	layer_data[TYPE_DECODED_REMAPPED_DATA] = TYPE_REMAP;
 }
-
-#ifdef CONFIG_FB
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event,
-				void *data);
-#endif
-
 static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct sec_ts_data *ts;
@@ -2868,7 +2868,6 @@ static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ts->input_dev->close = sec_ts_input_close;
 #endif
 	ts->input_dev_touch = ts->input_dev;
-	ts->input_closed = 1;
 
 	ret = input_register_device(ts->input_dev);
 	if (ret) {
@@ -2900,12 +2899,6 @@ static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 		input_err(true, &ts->client->dev, "%s: Unable to request threaded irq\n", __func__);
 		goto err_irq;
 	}
-
-#ifdef CONFIG_FB
-	ts->fb_notif.notifier_call = fb_notifier_callback;
-	if (fb_register_client(&ts->fb_notif))
-		pr_err("%s: could not create fb notifier\n", __func__);
-#endif
 
 #ifdef CONFIG_SAMSUNG_TUI
 	tsp_info = ts;
@@ -3508,10 +3501,6 @@ static int sec_ts_remove(struct i2c_client *client)
 	ts_dup = NULL;
 	ts->plat_data->power(ts, false);
 
-#ifdef CONFIG_FB
-	fb_unregister_client(&ts->fb_notif);
-#endif
-
 #ifdef CONFIG_SAMSUNG_TUI
 	tsp_info = NULL;
 #endif
@@ -3646,67 +3635,6 @@ static int sec_ts_pm_resume(struct device *dev)
 	struct sec_ts_data *ts = dev_get_drvdata(dev);
 
 		complete_all(&ts->resume_done);
-
-	return 0;
-}
-#endif
-
-#ifdef CONFIG_FB
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event,
-				void *data)
-{
-	struct fb_event *evdata = data;
-	struct sec_ts_data *ts = container_of(self, struct sec_ts_data, fb_notif);
-
-	// Only run for internal screen (fb0)
-	if (evdata && evdata->info->node != 0) return 0;
-
-	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
-		int *blank = evdata->data;
-
-		u8 data[3] = { 0 };
-		int ret;
-
-		switch (*blank) {
-		case FB_BLANK_UNBLANK:
-		case FB_BLANK_NORMAL:
-		case FB_BLANK_VSYNC_SUSPEND:
-		case FB_BLANK_HSYNC_SUSPEND:
-			/* Enable FOD when screen on or in AOD. */
-			if (!ts->fod_enabled && ts->plat_data->support_fod)
-				ts->lowpower_mode |= SEC_TS_MODE_SPONGE_PRESS;
-			/* Swap input status, as there is no case where
-			 * a new FB event is notified but no input status
-			 * change is needed.
-			 */
-			ts->input_closed ? sec_ts_input_open(ts->input_dev) : sec_ts_input_close(ts->input_dev);
-			break;
-		case FB_BLANK_POWERDOWN:
-			/* Disable FOD when screen off. */
-			if (!ts->fod_enabled && ts->plat_data->support_fod)
-				ts->lowpower_mode &= ~SEC_TS_MODE_SPONGE_PRESS;
-			/* Set input to close status. */
-			sec_ts_input_close(ts->input_dev);
-			break;
-		default:
-			/* Don't handle what we don't understand. */
-			break;
-		}
-
-		/* Write FOD enable/disable status to sponge. */
-		if (!ts->fod_enabled && ts->plat_data->support_fod) {
-			input_err(true, &ts->client->dev, "%s: Sponge (0x%02x)%s\n",
-					__func__, ts->lowpower_mode,
-					ts->input_closed ? "" : ", force fod enable");
-
-			data[2] = ts->lowpower_mode;
-
-			ret = ts->sec_ts_write_sponge(ts, data, 3);
-			if (ret < 0)
-				input_err(true, &ts->client->dev, "%s: Failed to write sponge\n", __func__);
-		}
-	}
 
 	return 0;
 }

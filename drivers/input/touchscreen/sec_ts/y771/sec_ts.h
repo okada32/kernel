@@ -744,7 +744,6 @@ struct sec_ts_data {
 	u8 external_noise_mode;
 	volatile u8 touch_noise_status;
 	volatile bool input_closed;
-	bool fod_enabled;
 	long prox_power_off;
 
 	int touch_count;
@@ -812,6 +811,7 @@ struct sec_ts_data {
 	unsigned int scrub_id;
 	unsigned int scrub_x;
 	unsigned int scrub_y;
+	int fod_pressed;
 
 	u8 tsp_temp_data;
 	bool tsp_temp_data_skip;
@@ -932,10 +932,6 @@ struct sec_ts_data {
 	int (*sec_ts_i2c_read_bulk)(struct sec_ts_data *ts, u8 *data, int len);
 	int (*sec_ts_read_sponge)(struct sec_ts_data *ts, u8 *data, int len);
 	int (*sec_ts_write_sponge)(struct sec_ts_data *ts, u8 *data, int len);
-
-#ifdef CONFIG_FB
-	struct notifier_block fb_notif;
-#endif
 };
 
 struct sec_ts_plat_data {
