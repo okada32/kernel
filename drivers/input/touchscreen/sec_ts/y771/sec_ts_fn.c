@@ -6404,13 +6404,10 @@ static void fod_enable(void *device_data)
 		return;
 	}
 
-	if (sec->cmd_param[0]) {
+	if (sec->cmd_param[0])
 		ts->lowpower_mode |= SEC_TS_MODE_SPONGE_PRESS;
-		ts->fod_enabled = 1;
-	} else {
+	else
 		ts->lowpower_mode &= ~SEC_TS_MODE_SPONGE_PRESS;
-		ts->fod_enabled = 0;
-	}
 
 	ts->press_prop = !!sec->cmd_param[1];
 

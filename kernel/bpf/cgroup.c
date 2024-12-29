@@ -95,7 +95,7 @@ static int compute_effective_progs(struct cgroup *cgrp,
 				   enum bpf_attach_type type,
 				   struct bpf_prog_array __rcu **array)
 {
-	struct bpf_prog_array __rcu *progs;
+	struct bpf_prog_array *progs;
 	struct bpf_prog_list *pl;
 	struct cgroup *p = cgrp;
 	int cnt = 0;
@@ -120,13 +120,12 @@ static int compute_effective_progs(struct cgroup *cgrp,
 					    &p->bpf.progs[type], node) {
 				if (!pl->prog)
 					continue;
-				rcu_dereference_protected(progs, 1)->
-					progs[cnt++] = pl->prog;
+				progs->progs[cnt++] = pl->prog;
 			}
 		p = cgroup_parent(p);
 	} while (p);
 
-	*array = progs;
+	rcu_assign_pointer(*array, progs);
 	return 0;
 }
 
@@ -502,6 +501,7 @@ EXPORT_SYMBOL(__cgroup_bpf_run_filter_sk);
  * @sk: sock struct that will use sockaddr
  * @uaddr: sockaddr struct provided by user
  * @type: The type of program to be exectuted
+ * @t_ctx: Pointer to attach type specific context
  *
  * socket is expected to be of type INET or INET6.
  *
@@ -510,12 +510,15 @@ EXPORT_SYMBOL(__cgroup_bpf_run_filter_sk);
  */
 int __cgroup_bpf_run_filter_sock_addr(struct sock *sk,
 				      struct sockaddr *uaddr,
-				      enum bpf_attach_type type)
+				      enum bpf_attach_type type,
+				      void *t_ctx)
 {
 	struct bpf_sock_addr_kern ctx = {
 		.sk = sk,
 		.uaddr = uaddr,
+		.t_ctx = t_ctx,
 	};
+	struct sockaddr_storage unspec;
 	struct cgroup *cgrp;
 	int ret;
 
@@ -524,6 +527,11 @@ int __cgroup_bpf_run_filter_sock_addr(struct sock *sk,
 	 */
 	if (sk->sk_family != AF_INET && sk->sk_family != AF_INET6)
 		return 0;
+
+	if (!ctx.uaddr) {
+		memset(&unspec, 0, sizeof(unspec));
+		ctx.uaddr = (struct sockaddr *)&unspec;
+	}
 
 	cgrp = sock_cgroup_ptr(&sk->sk_cgrp_data);
 	ret = BPF_PROG_RUN_ARRAY(cgrp->bpf.effective[type], &ctx, BPF_PROG_RUN);
